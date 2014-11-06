@@ -26,13 +26,14 @@ defmodule DslPlayground do
     # [{:hoge, [line: 15], [1]},
     #  {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
 
-
-    quote do: %{hoge: 1, moge: %{fuga: 2}}
+    quote do: unquote(Macro.escape(build_map(val)))
   end
 
   def build_map(ast) do
+    # ast =>
     # [{:hoge, [line: 15], [1]},
     #  {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
+
     %{hoge: 1, moge: %{fuga: 2}}
   end
 end
