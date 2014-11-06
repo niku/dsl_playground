@@ -34,6 +34,57 @@ defmodule DslPlayground do
     # [{:hoge, [line: 15], [1]},
     #  {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
 
-    %{hoge: 1, moge: %{fuga: 2}}
+    reduce_ast(Map.new, ast)
+  end
+
+  defp reduce_ast(map, [head|tail]) when is_tuple(head) do
+    # map =>
+    # %{}
+    # head =>
+    # {:hoge, [line: 15], [1]}
+    # tail =>
+    # [{:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
+
+    {k, _, v} = head
+    # k =>
+    # :hoge
+    # v =>
+    # [1]
+
+    new_map = Dict.put(map, k, reduce_ast(Map.new, v))
+    # new_map =>
+    # %{hoge: 1}
+
+    if tail === [] do
+      new_map
+    else
+      reduce_ast(new_map, tail)
+    end
+  end
+
+  defp reduce_ast(map, [head|tail]) when is_list(head) do
+    # map =>
+    # %{}
+    # head =>
+    # [do: {:fuga, [line: 17], [2]}]
+    # tail =>
+    # []
+
+    block_stripped = Keyword.get(head, :do)
+    # block_stripped =>
+    # {:fuga, [line: 17], [2]}
+
+    reduce_ast(map, [block_stripped|tail])
+  end
+
+  defp reduce_ast(_map, [head|_tail]) do
+    # _map =>
+    # %{}
+    # head =>
+    # 1
+    # _tail =>
+    # []
+
+    head
   end
 end
