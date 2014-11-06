@@ -12,6 +12,6 @@ defmodule DslPlayground do
     # result =>
     # %{fuga: 2, hoge: 1}
 
-    quote do: %{hoge: 1, fuga: 2}
+    quote do: unquote(Macro.escape(result))
   end
 end
