@@ -14,4 +14,25 @@ defmodule DslPlayground do
 
     quote do: unquote(Macro.escape(result))
   end
+
+  defmacro second_dsl(expr) do
+    # expr =>
+    # [do: {:__block__, [line: 13],
+    #   [{:hoge, [line: 15], [1]},
+    #    {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]}]
+
+    {:__block__, _, val} = Keyword.get(expr, :do)
+    # val =>
+    # [{:hoge, [line: 15], [1]},
+    #  {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
+
+
+    quote do: %{hoge: 1, moge: %{fuga: 2}}
+  end
+
+  def build_map(ast) do
+    # [{:hoge, [line: 15], [1]},
+    #  {:moge, [line: 16], [[do: {:fuga, [line: 17], [2]}]]}]
+    %{hoge: 1, moge: %{fuga: 2}}
+  end
 end
