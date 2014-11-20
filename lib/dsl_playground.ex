@@ -29,6 +29,10 @@ defmodule DslPlayground do
     quote do: unquote(Macro.escape(build_map(val)))
   end
 
+  defmacro third_dsl(expr) do
+    quote do: unquote(Macro.escape(new_build_map(expr)))
+  end
+
   def build_map(ast) do
     # ast =>
     # [{:hoge, [line: 15], [1]},
@@ -36,6 +40,43 @@ defmodule DslPlayground do
 
     reduce_ast(Map.new, ast)
   end
+
+  def new_build_map(ast) do
+    # ast =>
+    # [do: {:__block__, [line: 23],
+    #   [{:hoge, [line: 25], [1]},
+    #    {:moge, [line: 26],
+    #     [[do: {:__block__, [line: 23],
+    #        [{:fuga, [line: 27], [2]},
+    #         {:foo, [line: 28],
+    #          [[do: {:bar, [line: 29], [[do: {:baz, [line: 30], [3]}]]}]]}]}]]}]}]
+    new_reduce_ast(Map.new, ast)
+  end
+
+  defp new_reduce_ast(map, [do: {:__block__, _, v}]) do
+    new_reduce_ast(map, v)
+  end
+
+  defp new_reduce_ast(map, [do: {k, _, [v]}]) do
+    value = new_reduce_ast(Map.new, v)
+    new_reduce_ast(Dict.put(map, k, value), [])
+  end
+
+  defp new_reduce_ast(map, {k, _, [v]}) do
+    new_reduce_ast(Dict.put(map, k, v), [])
+  end
+
+  defp new_reduce_ast(map, [{k, _, [v]}|tail]) when is_list(v) do
+    value = new_reduce_ast(Map.new, v)
+    new_reduce_ast(Dict.put(map, k, value), tail)
+  end
+
+  defp new_reduce_ast(map, [{k, _, [v]}|tail]) do
+    new_reduce_ast(Dict.put(map, k, v), tail)
+  end
+
+  defp new_reduce_ast(map, []), do: map
+  defp new_reduce_ast(_map, v), do: v
 
   defp reduce_ast(map, [head|tail]) when is_tuple(head) do
     # map =>
